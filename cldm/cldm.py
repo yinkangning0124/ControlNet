@@ -45,7 +45,7 @@ class ControlledUnetModel(UNetModel):
         return self.out(h)
 
 
-class ControlNet(nn.Module):
+class ControlNet(nn.Module): # encoder part of the original SD
     def __init__(
             self,
             image_size,
@@ -305,11 +305,11 @@ class ControlNet(nn.Module):
         return outs
 
 
-class ControlLDM(LatentDiffusion):
+class ControlLDM(LatentDiffusion): # TODO copy the model from original SD
 
     def __init__(self, control_stage_config, control_key, only_mid_control, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.control_model = instantiate_from_config(control_stage_config)
+        self.control_model = instantiate_from_config(control_stage_config) # ControlNet
         self.control_key = control_key
         self.only_mid_control = only_mid_control
         self.control_scales = [1.0] * 13
@@ -317,7 +317,7 @@ class ControlLDM(LatentDiffusion):
     @torch.no_grad()
     def get_input(self, batch, k, bs=None, *args, **kwargs):
         x, c = super().get_input(batch, self.first_stage_key, *args, **kwargs)
-        control = batch[self.control_key]
+        control = batch[self.control_key] # This is the control signal for the controlnet
         if bs is not None:
             control = control[:bs]
         control = control.to(self.device)
